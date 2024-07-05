@@ -15,6 +15,23 @@ file(GLOB_RECURSE HEADERS "include/*.h")
 # find Eigen3 package
 find_package(Eigen3 REQUIRED)
 
+find_package(glfw3 REQUIRED)
+
+# include glfw3 headers
+include_directories(${GLFW_INCLUDE_DIRS})
+
+#find OpenGL packages
+find_package(OpenGL REQUIRED)
+
+# include OpenGL headers
+include_directories(${OPENGL_INCLUDE_DIRS})
+
+# find GLEW package
+find_package(GLEW REQUIRED)
+
+# include GLEW headers
+include_directories(${GLEW_INCLUDE_DIRS})
+
 # include Eigen3 headers
 include_directories(${EIGEN3_INCLUDE_DIR})
 
@@ -24,5 +41,5 @@ add_executable(${EXECUTABLE} ${SOURCES} ${HEADERS})
 # add include directories
 target_include_directories(${EXECUTABLE} PRIVATE include)
 
-target_link_libraries(${EXECUTABLE} Eigen3::Eigen)
+target_link_libraries(${EXECUTABLE} Eigen3::Eigen glfw GLEW::GLEW ${OPENGL_LIBRARIES})
 

@@ -21,9 +21,9 @@ public:
 
 class TetCage {
 public:
-    std::vector<Tetrahedron>& tetrahedrons;
+    std::vector<Tetrahedron> tetrahedrons;
 
-    TetCage(std::vector<Tetrahedron>& tets) : tetrahedrons(tets) {}
+    TetCage(std::vector<Tetrahedron> tets) : tetrahedrons(tets) {}
 
 
     void init();

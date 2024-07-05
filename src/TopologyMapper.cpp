@@ -21,7 +21,7 @@ int TopologyMapper::findTetrahedron(PointCloud& pc, TetCage& cage) {
 }
 
 void TopologyMapper::barycentricPCtoTetCage(PointCloud& pc, TetCage& cage, PointCloud& barycentricPC) {
-	//barycentricPC.resize(pc.size());
+	barycentricPC.resize(pc.size());
 	for(int i = 0; i < pc.size(); i++){
 		int tetIndex = findTetrahedron(pc, cage);
 		if (tetIndex != -1) {
