@@ -1,10 +1,10 @@
 #include "PointCloud.h"
 
 
-PointCloud::addPoint(Point p) {
+void PointCloud::addPoint(const Eigen::Vector3f& p) {
 	points.push_back(p);
 }
 
-PointCloud::resize(int size) {
+void PointCloud::resize(int size) {
 	points.resize(size);
 }

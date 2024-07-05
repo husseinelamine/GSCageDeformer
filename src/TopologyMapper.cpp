@@ -3,20 +3,32 @@
 int TopologyMapper::findTetrahedron(PointCloud& pc, TetCage& cage) {
 
 	int tetIndex = -1;
-	for(int i = 0; i < cage.tetrahedra.size(); i++){
-		if(cage.tetrahedra[i].contains(pc[0])){
-			tetIndex = i;
-			break;
+	float d = -1;
+	float distance = 1e10;
+	for(int i = 0; i < cage.tetrahedrons.size(); i++){
+		d = cage.tetrahedrons[i].contains(pc[0]);
+		if(d != -1){
+			if (d < distance) {
+				distance = d;
+				tetIndex = i;
+			}	
 		}
+		
 	}
 	return tetIndex;
 
 
 }
 
-TopologyMapper::barycentricPCtoTetCage(PointCloud& pc, TetCage& cage, PointCloud& barycentricPC) {
-	barycentricPC.resize(pc.size());
+void TopologyMapper::barycentricPCtoTetCage(PointCloud& pc, TetCage& cage, PointCloud& barycentricPC) {
+	//barycentricPC.resize(pc.size());
 	for(int i = 0; i < pc.size(); i++){
-		barycentricPC[i] = cage.barycentricCoordinates(pc[i]);
+		int tetIndex = findTetrahedron(pc, cage);
+		if (tetIndex != -1) {
+			barycentricPC.addPoint(cage.tetrahedrons[tetIndex].invTransposeMatrix * (pc[i] - cage.tetrahedrons[tetIndex].vertices[0]));
+		}
+		else {
+			barycentricPC.addPoint(Eigen::Vector3f(-1, -1, -1));
+		}
 	}
 }

@@ -6,17 +6,17 @@
 
 class Tetrahedron {
 public:
-    std::vector<Eigen::Vector3d> vertices;
-    Eigen::Matrix3d edgeMatrix;
-    Eigen::Matrix3d invTransposeMatrix;
-    Eigen::Vector3d center;
+    std::vector<Eigen::Vector3f> vertices;
+    Eigen::Matrix3f edgeMatrix;
+    Eigen::Matrix3f invTransposeMatrix;
+    Eigen::Vector3f center;
 
-    Tetrahedron(Eigen::Vector3d v0, Eigen::Vector3d v1, Eigen::Vector3d v2, Eigen::Vector3d v3)
+    Tetrahedron(Eigen::Vector3f v0, Eigen::Vector3f v1, Eigen::Vector3f v2, Eigen::Vector3f v3)
         : vertices({ v0, v1, v2, v3 }) {}
 
 
     void init();
-    int contains(const Eigen::Vector3d& p) const; // returns -1 if p is outside, distance to the surface otherwise
+    int contains(const Eigen::Vector3f& p) const; // returns -1 if p is outside, distance to the surface otherwise
 };
 
 class TetCage {
