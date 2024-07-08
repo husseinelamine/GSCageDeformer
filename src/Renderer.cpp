@@ -1,45 +1,34 @@
 #include "Renderer.h"
 #include <iostream>
+#include "UtilMath.h"
+
+
+
+const GLfloat colors[4][3] = {
+	{ 1.0, 0.0, 0.0 }, // Red
+	{ 0.0, 1.0, 0.0 }, // Blue
+	{ 0.0, 0.0, 1.0 }, // Green
+	{ 1.0, 1.0, 1.0 } // White
+};
+
+const GLuint indicesBase[] = {
+	0, 1, 2,
+	0, 2, 3,
+	0, 3, 1,
+	1, 3, 2
+
+};
 
 void Renderer::initCage() {
 	std::vector<Tetrahedron> tetrahedrons{
 		// Tetrahedron 1
 		{
-			{ 0.0f, 0.0f, 0.0f },
-			{ 1.0f, 0.0f, 0.0f },
-			{ 0.0f, 1.0f, 0.0f },
-			{ 0.0f, 0.0f, 1.0f }
-		},
-		// Tetrahedron 2
-		{
-			{ 1.0f, 1.0f, 1.0f },
-			{ 2.0f, 1.0f, 1.0f },
-			{ 1.0f, 2.0f, 1.0f },
-			{ 1.0f, 1.0f, 2.0f }
-		},
-		// Tetrahedron 3
-		{
-			{ -1.0f, 0.0f, 0.0f },
-			{ 0.0f, -1.0f, 0.0f },
-			{ 0.0f, 0.0f, -1.0f },
-			{ 1.0f, 1.0f, 1.0f }
-		},
-		// Tetrahedron 4
-		{
-			{ 0.5f, 0.5f, 0.5f },
-			{ 1.5f, 0.5f, 0.5f },
-			{ 0.5f, 1.5f, 0.5f },
-			{ 0.5f, 0.5f, 1.5f }
-		},
-		// Tetrahedron 5
-		{
-			{ 0.0f, 0.0f, 0.0f },
-			{ 1.0f, 0.0f, 0.0f },
-			{ 0.0f, 1.0f, 0.0f },
-			{ 0.0f, 0.0f, 1.0f }
+			{ 0.8, 0.8, 0.8},
+			{ -0.8, -0.8, 0.8},
+			{ -0.8, 0.8, -0.8},
+			{ 0.8, -0.8, -0.8}
 		}
 	};
-
 
 	cage = new TetCage{ tetrahedrons };
 	cage->init();
@@ -96,6 +85,8 @@ int Renderer::init() {
 	// Setup OpenGL buffers and shaders
 	setupBuffers();
 	setupShaders();
+
+	return 1;
 }
 
 void Renderer::setupBuffers() {
@@ -105,43 +96,47 @@ void Renderer::setupBuffers() {
 
 	// Create and bind VBO and EBO
 	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &colorVBO);
 	glGenBuffers(1, &EBO);
 
-	std::vector<float> vertices;
-	std::vector<unsigned int> indices;
+	std::vector<GLfloat> vertices;
+	std::vector<GLuint> indices;
 	//initCage();
+	int tetIndex = 0;
 	for (const auto& tetrahedron : cage->tetrahedrons) {
 		for (const auto& vertex : tetrahedron.vertices) {
 			vertices.push_back(vertex.x());
 			vertices.push_back(vertex.y());
 			vertices.push_back(vertex.z());
 		}
-		unsigned int baseIndex = vertices.size() / 3 - 4;
-		indices.push_back(baseIndex + 0);
-		indices.push_back(baseIndex + 1);
-		indices.push_back(baseIndex + 2);
-		indices.push_back(baseIndex + 0);
-		indices.push_back(baseIndex + 1);
-		indices.push_back(baseIndex + 3);
-		indices.push_back(baseIndex + 1);
-		indices.push_back(baseIndex + 2);
-		indices.push_back(baseIndex + 3);
-		indices.push_back(baseIndex + 2);
-		indices.push_back(baseIndex + 0);
-		indices.push_back(baseIndex + 3);
+		
+		for(int i = 0; i < 12; i++) {
+			indices.push_back(indicesBase[i] + tetIndex * 4);
+		}
+
+		tetIndex++;
 	}
 
 	// Bind and set VBO data
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+
 
 	// Bind and set EBO data
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
 	// Set vertex attribute pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
+
+	// Set color attribute pointers
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+
 
 	// Unbind VAO
 	glBindVertexArray(0);
@@ -185,14 +180,55 @@ GLuint Renderer::linkProgram(GLuint vertexShader, GLuint fragmentShader) {
 	return shaderProgram;
 }
 
+void Renderer::rotateCage(float angle, const Eigen::Vector3f& axis) {
+	Eigen::Matrix3f rotation = Eigen::AngleAxisf(angle, axis).toRotationMatrix();
+	for (auto& tetrahedron : cage->tetrahedrons) {
+		for (auto& vertex : tetrahedron.vertices) {
+			vertex = rotation * vertex;
+		}
+	}
+}
 
 void Renderer::render() {
+
+	// 
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	// Get Time
+	float time = glfwGetTime();
+
+	
+	
 
 	// Use the shader program
 	glUseProgram(shaderProgram);
+
+
+	// send transformation matrix to shader
+	// Create transformations
+	Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
+	Eigen::Matrix4f view = Eigen::Matrix4f::Identity();
+	Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
+
+	// Set the model, view and projection matrices
+	// rotate model over time
+	model = Eigen::Affine3f(Eigen::AngleAxisf(time, Eigen::Vector3f(0.5f, 1.0f, 0.0f))).matrix();
+
+	view = Eigen::Affine3f(Eigen::Translation3f(0.0f, 0.0f, -5.0f)).matrix();
+
+	// function definition in UtilMath.h
+	projection = Eigen::perspective(45.0f, (float)width / (float)height, 0.1f, 100.0f);
+
+
+	GLint modelLoc = glGetUniformLocation(shaderProgram, "model");
+	GLint viewLoc = glGetUniformLocation(shaderProgram, "view");
+	GLint projLoc = glGetUniformLocation(shaderProgram, "projection");
+
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.data());
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.data());
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, projection.data());
+
 
 	// Bind VAO and draw the elements
 	glBindVertexArray(VAO);

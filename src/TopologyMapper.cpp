@@ -1,26 +1,17 @@
 #include "TopologyMapper.h"
+#include <iostream>
 
 int TopologyMapper::findTetrahedron(PointCloud& pc, TetCage& cage) {
 
-	int tetIndex = -1;
-	float d = -1;
-	float distance = 1e10;
 	for(int i = 0; i < cage.tetrahedrons.size(); i++){
-		d = cage.tetrahedrons[i].contains(pc[0]);
-		if(d != -1){
-			if (d < distance) {
-				distance = d;
-				tetIndex = i;
-			}	
-		}
-		
+		if (cage.tetrahedrons[i].contains(pc[0]))
+			return i;
 	}
-	return tetIndex;
-
-
+	return -1;
 }
 
-void TopologyMapper::barycentricPCtoTetCage(PointCloud& pc, TetCage& cage, PointCloud& barycentricPC) {
+bool TopologyMapper::barycentricPCtoTetCage(PointCloud& pc, TetCage& cage, PointCloud& barycentricPC) {
+	bool isValid = true;
 	barycentricPC.resize(pc.size());
 	for(int i = 0; i < pc.size(); i++){
 		int tetIndex = findTetrahedron(pc, cage);
@@ -29,6 +20,9 @@ void TopologyMapper::barycentricPCtoTetCage(PointCloud& pc, TetCage& cage, Point
 		}
 		else {
 			barycentricPC.addPoint(Eigen::Vector3f(-1, -1, -1));
+			std::cout << "[WARNING]: Point " << i << " is not in any tetrahedron" << std::endl;
+			isValid = false;
 		}
 	}
+	return isValid;
 }

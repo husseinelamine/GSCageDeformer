@@ -16,7 +16,8 @@ public:
 
 
     void init();
-    int contains(const Eigen::Vector3f& p) const; // returns -1 if p is outside, distance to the surface otherwise
+    bool contains(const Eigen::Vector3f& p) const; // returns p is inside or outside the tetrahedron
+    bool isValidBarycentric(const Eigen::Vector3f& bary) const;
 };
 
 class TetCage {

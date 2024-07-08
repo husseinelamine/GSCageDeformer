@@ -25,7 +25,7 @@ public:
 private:
 	int width, height;
 	GLFWwindow* window;
-	GLuint VAO, VBO, EBO;
+	GLuint VAO, VBO, EBO, colorVBO;
 	GLuint shaderProgram;
 	TetCage* cage;
 
@@ -34,24 +34,36 @@ private:
 	void setupBuffers();
 	void setupShaders();
 	void initCage();
+	void rotateCage(float angle, const Eigen::Vector3f& axis);
 
 	// Vertex shader source code
 	const char* vertexShaderSource = R"(
 		#version 330 core
 		layout(location = 0) in vec3 aPos;
+		layout(location = 1) in vec3 aColor;
+
+		out vec3 ourColor;
+
+		uniform mat4 model;
+		uniform mat4 view;
+		uniform mat4 projection;
+
 		void main() {
-			gl_Position = vec4(aPos, 1.0);
+			gl_Position = projection * view * model * vec4(aPos, 1.0);
+			ourColor = aColor;
 		}
 		)";
 
 	// Fragment shader source code
 	const char* fragmentShaderSource = R"(
 		#version 330 core
+		in vec3 ourColor;
 		out vec4 FragColor;
 		void main() {
-			FragColor = vec4(0.5, 0.5, 0.2, 1.0);
+			FragColor = vec4(ourColor, 1.0);
 		}
 		)";
+
 
 };
 

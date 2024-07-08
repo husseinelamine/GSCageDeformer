@@ -9,7 +9,7 @@ class TopologyMapper
 {
 	public:
 
-		static void barycentricPCtoTetCage(PointCloud &pc, TetCage &cage, PointCloud &barycentricPC);
+		static bool barycentricPCtoTetCage(PointCloud &pc, TetCage &cage, PointCloud &barycentricPC);
 		static int findTetrahedron(PointCloud &pc, TetCage &cage);
 };
 
