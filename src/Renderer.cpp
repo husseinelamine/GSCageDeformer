@@ -1,35 +1,79 @@
 #include "Renderer.h"
 #include <iostream>
 #include "UtilMath.h"
+#include "MeshReader.h"
 
-
-
-const GLfloat colors[4][3] = {
-	{ 1.0, 0.0, 0.0 }, // Red
-	{ 0.0, 1.0, 0.0 }, // Blue
-	{ 0.0, 0.0, 1.0 }, // Green
-	{ 1.0, 1.0, 1.0 } // White
-};
-
-const GLuint indicesBase[] = {
-	0, 1, 2,
-	0, 2, 3,
-	0, 3, 1,
-	1, 3, 2
-
-};
 
 void Renderer::initCage() {
+
+	MeshReader* meshReader = new MeshReader();
+	Mesh mesh;
+	meshReader->readMsh("C:/Users/helamine/source/repos/ISProjectsV1/ISPhysics/assets/meshes/mug/surface_cage.obj_.msh", mesh);
+
+	std::vector<Tetrahedron> tetrahedrons = meshReader->getTetrahedrons(mesh);
+	// free memory
+	delete meshReader;
+
+	/*
 	std::vector<Tetrahedron> tetrahedrons{
 		// Tetrahedron 1
 		{
-			{ 0.8, 0.8, 0.8},
-			{ -0.8, -0.8, 0.8},
-			{ -0.8, 0.8, -0.8},
-			{ 0.8, -0.8, -0.8}
-		}
+			{ 1, 1.0, 1.0},
+			{ -1.0, -1.0, 1.0},
+			{ -1.0, 1.0, -1.0},
+			{ 1.0, -1.0, -1.0},
+		},
+		//// Tetrahedron 2
+		//{
+		//	 { 4.0,  1.0,  1.0 },
+		//	  { 1.0, -1.0,  1.0 },
+		//	  { 1.0,  1.0, -1.0 },
+		//	  { 4.0, -1.0, -1.0 }
+		//},
+		//// Tetrahedron 3
+		//{
+		//	 { 7.0,  1.0,  1.0 },
+		//	  { 4.0, -1.0,  1.0 },
+		//	  { 3.0,  1.0, -1.0 },
+		//	  { 7.0, -1.0, -1.0 }
+		//},
+		//// Tetrahedron 4
+		//{
+		//	 { 10.0,  1.0,  1.0 },
+		//	  { 7.0, -1.0,  1.0 },
+		//	  { 7.0,  1.0, -1.0 },
+		//	  { 10.0, -1.0, -1.0 }
+		//},
+		//// Tetrahedron 5
+		//{
+		//	 { 1.0,  1.0,  3.0 },
+		//	  { -1.0, -1.0,  3.0 },
+		//	  { -1.0,  1.0,  1.0 },
+		//	  { 1.0, -1.0,  1.0 }
+		//},
+		//// Tetrahedron 6
+		//{
+		//	 { 3.0,  1.0,  3.0 },
+		//	  { 1.0, -1.0,  3.0 },
+		//	  { 1.0,  1.0,  1.0 },
+		//	  { 3.0, -1.0,  1.0 }
+		//},
+		//// Tetrahedron 7
+		//{
+		//	 { 5.0,  1.0,  3.0 },
+		//	  { 3.0, -1.0,  3.0 },
+		//	  { 3.0,  1.0,  1.0 },
+		//	  { 5.0, -1.0,  1.0 }
+		//},
+		//// Tetrahedron 8
+		//{
+		//	 { 7.0,  1.0,  3.0 },
+		//	  { 5.0, -1.0,  3.0 },
+		//	  { 5.0,  1.0,  1.0 },
+		//	  { 7.0, -1.0,  1.0 }
+		//}
 	};
-
+	*/
 	cage = new TetCage{ tetrahedrons };
 	cage->init();
 
@@ -78,7 +122,7 @@ int Renderer::init() {
 
 	glEnable(GL_DEPTH_TEST);
 
-
+	
 	// Initialize the cage
 	initCage();
 
@@ -96,7 +140,7 @@ void Renderer::setupBuffers() {
 
 	// Create and bind VBO and EBO
 	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &colorVBO);
+	//glGenBuffers(1, &colorVBO);
 	glGenBuffers(1, &EBO);
 
 	std::vector<GLfloat> vertices;
@@ -108,11 +152,29 @@ void Renderer::setupBuffers() {
 			vertices.push_back(vertex.x());
 			vertices.push_back(vertex.y());
 			vertices.push_back(vertex.z());
+
 		}
-		
-		for(int i = 0; i < 12; i++) {
-			indices.push_back(indicesBase[i] + tetIndex * 4);
-		}
+
+		// create the indices for the 4 triangles of the tetrahedron			
+		// Triangle 1:
+		indices.push_back(tetIndex * 4);
+		indices.push_back(tetIndex * 4 + 1);
+		indices.push_back(tetIndex * 4 + 2);
+
+		// Triangle 2:
+		indices.push_back(tetIndex * 4);
+		indices.push_back(tetIndex * 4 + 2);
+		indices.push_back(tetIndex * 4 + 3);
+
+		// Triangle 3:
+		indices.push_back(tetIndex * 4);
+		indices.push_back(tetIndex * 4 + 3);
+		indices.push_back(tetIndex * 4 + 1);
+
+		// Triangle 4:
+		indices.push_back(tetIndex * 4 + 1);
+		indices.push_back(tetIndex * 4 + 3);
+		indices.push_back(tetIndex * 4 + 2);
 
 		tetIndex++;
 	}
@@ -121,8 +183,8 @@ void Renderer::setupBuffers() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+	/*glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);*/
 
 
 	// Bind and set EBO data
@@ -134,8 +196,8 @@ void Renderer::setupBuffers() {
 	glEnableVertexAttribArray(0);
 
 	// Set color attribute pointers
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(1);
+	/*glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);*/
 
 
 	// Unbind VAO
@@ -198,8 +260,8 @@ void Renderer::render() {
 	// Get Time
 	float time = glfwGetTime();
 
-	
-	
+
+
 
 	// Use the shader program
 	glUseProgram(shaderProgram);
@@ -212,13 +274,12 @@ void Renderer::render() {
 	Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
 
 	// Set the model, view and projection matrices
-	// rotate model over time
-	model = Eigen::Affine3f(Eigen::AngleAxisf(time, Eigen::Vector3f(0.5f, 1.0f, 0.0f))).matrix();
+	model = Eigen::Affine3f(Eigen::AngleAxisf(time, Eigen::Vector3f(0.f, 1.0f, 0.0f))).matrix();
 
-	view = Eigen::Affine3f(Eigen::Translation3f(0.0f, 0.0f, -5.0f)).matrix();
+	view = Eigen::Affine3f(Eigen::Translation3f(0.0f, 0.0f, -100.0f)).matrix();
 
 	// function definition in UtilMath.h
-	projection = Eigen::perspective(45.0f, (float)width / (float)height, 0.1f, 100.0f);
+	projection = Eigen::perspective(45.0f, (float)width / (float)height, 0.1f, 1000.0f);
 
 
 	GLint modelLoc = glGetUniformLocation(shaderProgram, "model");

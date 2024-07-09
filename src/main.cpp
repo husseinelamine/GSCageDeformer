@@ -3,6 +3,8 @@
 #include "TopologyMapper.h"
 #include "Renderer.h"
 
+//#define HIDE_CONSOLE_WINDOW 1
+
 // check if windows os
 #ifdef _WIN32
 #include <windows.h>
@@ -12,8 +14,10 @@
 int main(int argc, char* argv[]) {
 
 #ifdef _WIN32
+#ifdef HIDE_CONSOLE_WINDOW
 	// hide console window
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
+#endif
 #endif
 
 	/*//std::vector<Tetrahedron> tetrahedrons{
