@@ -115,3 +115,10 @@ std::vector<Tetrahedron> MeshReader::getTetrahedrons(const Mesh& mesh) {
 	}
 	return tetrahedrons;
 }
+
+void MeshReader::reset() {
+	m_vertices.clear();
+	m_indices.clear();
+	nodes.clear();
+	elements.clear();
+}

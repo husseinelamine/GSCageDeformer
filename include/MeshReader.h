@@ -39,6 +39,8 @@ public:
 	std::vector<unsigned int> getIndices() const;
 	std::vector<Tetrahedron> getTetrahedrons(const Mesh& mesh);
 
+	void reset();
+
 private:
 	std::vector<float> m_vertices;
 	std::vector<unsigned int> m_indices;

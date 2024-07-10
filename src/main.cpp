@@ -2,6 +2,8 @@
 #include "PointCloud.h"
 #include "TopologyMapper.h"
 #include "Renderer.h"
+#include "MeshReader.h"
+#include "TetrahedronMeshRenderer.h"
 
 //#define HIDE_CONSOLE_WINDOW 1
 
@@ -57,7 +59,27 @@ int main(int argc, char* argv[]) {
 	//TopologyMapper::barycentricPCtoTetCage(pc, cage, barycentricPC);*/
 
 	Renderer renderer{ 720, 480 }; 
-	renderer.init();
+	if (renderer.init() == -1)
+	{
+		return -1;
+	}
+
+	MeshReader meshReader;
+	Mesh mesh;
+	meshReader.readMsh("C:/Users/helamine/source/repos/ISProjectsV1/ISPhysics/assets/meshes/mug/surface_cage.obj_.msh", mesh);
+
+	meshReader.reset();
+	Mesh mesh2;
+	meshReader.readMsh("C:/Users/helamine/source/repos/ISProjectsV1/ISPhysics/assets/meshes/mug/surface_cage.obj_.msh", mesh2);
+
+	std::vector<Tetrahedron> tetrahedrons = meshReader.getTetrahedrons(mesh);
+	TetCage cage{ tetrahedrons };
+	cage.init();
+
+	TetrahedronMeshRenderer tetrahedronMeshRenderer{ &cage };
+	renderer.addMeshRenderer(&tetrahedronMeshRenderer);
+
+	renderer.setupBuffers();
 
 	while (!renderer.shouldClose())
 	{

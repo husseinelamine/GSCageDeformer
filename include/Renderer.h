@@ -1,73 +1,40 @@
+
 #ifndef RENDERER_H
 #define RENDERER_H
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "Tetrahedron.h"
-#include "PointCloud.h"
+#include <vector>
+#include "MeshRenderer.h"
+#include "ShaderManager.h"
 #include "TopologyMapper.h"
-
+#include "PointCloud.h"
+#include <Eigen/Dense>
 
 class Renderer {
 public:
-	Renderer(int width = 720, int height = 480) : width(width), height(height) {}
-	~Renderer() {}
-	void render();
-	int init();
-	void update();
-	void cleanup();
-	bool shouldClose() { return glfwWindowShouldClose(window); }
+    Renderer(int width = 720, int height = 480);
+    ~Renderer();
+    void render();
+    int init();
+    void update();
+    void cleanup();
+    bool shouldClose() { return glfwWindowShouldClose(window); }
+    void setupShaders();
+    void setupBuffers();
 
-	void bindKeyCallback(GLFWkeyfun callback) {
-		glfwSetKeyCallback(window, callback);
-	}
+    void bindKeyCallback(GLFWkeyfun callback) {
+    	glfwSetKeyCallback(window, callback);
+    }
+
+    void addMeshRenderer(MeshRenderer* meshRenderer);
 
 private:
-	int width, height;
-	GLFWwindow* window;
-	GLuint VAO, VBO, EBO, colorVBO;
-	GLuint shaderProgram;
-	TetCage* cage;
-
-	GLuint compileShader(GLenum type, const char* source);
-	GLuint linkProgram(GLuint vertexShader, GLuint fragmentShader);
-	void setupBuffers();
-	void setupShaders();
-	void initCage();
-	void rotateCage(float angle, const Eigen::Vector3f& axis);
-
-	// Vertex shader source code
-	const char* vertexShaderSource = R"(
-		#version 330 core
-		layout(location = 0) in vec3 aPos;
-
-		out vec3 ourColor;
-		uniform mat4 model;
-		uniform mat4 view;
-		uniform mat4 projection;
-
-		void main() {
-			gl_Position = projection * view * model * vec4(aPos, 1.0);
-			ourColor = aPos;
-		}
-		)";
-
-	// Fragment shader source code
-	const char* fragmentShaderSource = R"(
-		#version 330 core
-		in vec3 ourColor;
-		out vec4 FragColor;
-		void main() {
-			// illuminate dark colors
-			if(ourColor.x < 0.1 && ourColor.y < 0.1 && ourColor.z < 0.1)
-				FragColor = vec4(0.8,0.0,0.1, 1.0);
-			else
-				FragColor = vec4(ourColor, 1.0);
-		}
-		)";
-
+    int width, height;
+    GLFWwindow* window;
+    ShaderManager shaderManager;
+    std::vector<MeshRenderer*> meshRenderers;
 
 };
-
 
 #endif // RENDERER_H
