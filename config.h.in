@@ -1,0 +1,3 @@
+// config.h.in
+
+#define ROOT_PATH "${PROJECT_SOURCE_DIR}/extlibs/splatapult/"

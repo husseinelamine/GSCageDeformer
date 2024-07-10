@@ -1,7 +1,7 @@
 #include "TopologyMapper.h"
 #include <iostream>
 
-int TopologyMapper::findTetrahedron(PointCloud& pc, TetCage& cage) {
+int TopologyMapper::findTetrahedron(GSDeformer::PointCloud& pc, TetCage& cage) {
 
 	for(int i = 0; i < cage.tetrahedrons.size(); i++){
 		if (cage.tetrahedrons[i].contains(pc[0]))
@@ -10,7 +10,7 @@ int TopologyMapper::findTetrahedron(PointCloud& pc, TetCage& cage) {
 	return -1;
 }
 
-bool TopologyMapper::barycentricPCtoTetCage(PointCloud& pc, TetCage& cage, PointCloud& barycentricPC) {
+bool TopologyMapper::barycentricPCtoTetCage(GSDeformer::PointCloud& pc, TetCage& cage, GSDeformer::PointCloud& barycentricPC) {
 	bool isValid = true;
 	barycentricPC.resize(pc.size());
 	for(int i = 0; i < pc.size(); i++){

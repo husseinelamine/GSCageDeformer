@@ -4,6 +4,8 @@
 #include <vector>
 #include <Eigen/Dense>
 
+namespace GSDeformer{
+
 class PointCloud
 {
 	public:
@@ -26,5 +28,5 @@ class PointCloud
 		}
 };
 
-
+}
 #endif // POINTCLOUD_H

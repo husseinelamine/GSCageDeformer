@@ -12,6 +12,29 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 # get header files from include directory
 file(GLOB_RECURSE HEADERS "include/*.h")
 
+# Specify the path for the configuration file
+set(CONFIG_FILE "${CMAKE_BINARY_DIR}/config.h")
+
+# Use configure_file to create the header with the ROOT_PATH definition
+configure_file(
+    ${CMAKE_SOURCE_DIR}/config.h.in
+    ${CONFIG_FILE}
+)
+
+# Include the generated configuration file in your project
+include_directories(${CMAKE_BINARY_DIR})
+
+
+
+#find gaussian renderer
+add_subdirectory(extlibs/splatapult)
+
+
+
+include_directories(
+    extlibs/splatapult/src
+)
+
 # find Eigen3 package
 find_package(Eigen3 REQUIRED)
 
@@ -41,5 +64,6 @@ add_executable(${EXECUTABLE} ${SOURCES} ${HEADERS})
 # add include directories
 target_include_directories(${EXECUTABLE} PRIVATE include)
 
-target_link_libraries(${EXECUTABLE} Eigen3::Eigen glfw GLEW::GLEW ${OPENGL_LIBRARIES})
+target_link_libraries(${EXECUTABLE} Eigen3::Eigen glfw GLEW::GLEW ${OPENGL_LIBRARIES} splatapult)
+
 
