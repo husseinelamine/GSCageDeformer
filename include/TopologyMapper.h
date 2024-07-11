@@ -3,7 +3,10 @@
 
 #include "Tetrahedron.h"
 #include "PointCloudm.h"
+#include "gaussiancloud.h"
 
+
+typedef GaussianCloud::Gaussian Gaussian;
 
 class TopologyMapper
 {
@@ -11,6 +14,13 @@ class TopologyMapper
 
 		static bool barycentricPCtoTetCage(GSDeformer::PointCloud &pc, TetCage &cage, GSDeformer::PointCloud &barycentricPC);
 		static int findTetrahedron(GSDeformer::PointCloud &pc, TetCage &cage);
+
+		static bool barycentricGStoTetCage(GaussianCloud &gs, TetCage &cage, std::vector<Eigen::Vector3f> &barycentricGS);
+		static int findTetrahedron(Gaussian &gs, TetCage &cage);
+
+		static bool barycentricGStoTetCageFromEmptyCage(GaussianCloud &gs, TetCage&cage, std::vector<Eigen::Vector3f> &barycentricGS);
+
+
 };
 
 #endif // TOPOLOGYMAPPER_H

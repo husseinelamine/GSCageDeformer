@@ -75,7 +75,7 @@ namespace UtilMath
 
 	template <typename T>
 	bool isSumNearlyGE(T sum, T a) {
-		return sum >= a;
+		return fabs(sum - a) < EPSILON;
 	}
 
 	template <typename T, typename... Ts>

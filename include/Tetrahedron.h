@@ -3,6 +3,9 @@
 
 #include <Eigen/Dense>
 #include <vector>
+#include "gaussiancloud.h"
+
+typedef GaussianCloud::Gaussian Gaussian;
 
 class Tetrahedron {
 public:
@@ -17,14 +20,21 @@ public:
 
     void init();
     bool contains(const Eigen::Vector3f& p) const; // returns p is inside or outside the tetrahedron
+    bool contains(const Gaussian& g) const;
     bool isValidBarycentric(const Eigen::Vector3f& bary) const;
 };
 
 class TetCage {
 public:
+
+    TetCage() {}
+
     std::vector<Tetrahedron> tetrahedrons;
 
     TetCage(std::vector<Tetrahedron> tets) : tetrahedrons(tets) {}
+    TetCage(std::shared_ptr<GaussianCloud> cloud);
+
+    void simplify();
 
 
     void init();
