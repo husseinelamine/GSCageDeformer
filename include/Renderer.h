@@ -22,6 +22,7 @@ public:
     bool shouldClose() { return glfwWindowShouldClose(window); }
     void setupShaders();
     void setupBuffers();
+    GLFWwindow* getWindow() { return window; }
 
     void bindKeyCallback(GLFWkeyfun callback) {
     	glfwSetKeyCallback(window, callback);
