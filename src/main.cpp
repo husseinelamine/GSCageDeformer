@@ -349,7 +349,7 @@ void render() {
     if (fbo) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         Clear(fboSize, true);
-000        RenderDesktop(fboSize, desktopProgram, fbo->GetColorTexture()->texture, false);
+        RenderDesktop(fboSize, desktopProgram, fbo->GetColorTexture()->texture, false);
     }
 
     glm::mat4 cameraMat = flyCam->GetCameraMat();
