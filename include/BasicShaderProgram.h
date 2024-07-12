@@ -15,9 +15,10 @@ private:
 		uniform mat4 model;
 		uniform mat4 view;
 		uniform mat4 projection;
+		uniform mat4 modelViewMat;
 
 		void main() {
-			gl_Position = projection * view * model * vec4(aPos, 1.0);
+			gl_Position = projection * modelViewMat * vec4(aPos, 1.0);
 			position = aPos;
 		}
 		)";
@@ -28,19 +29,21 @@ private:
 		in vec3 position;
 		out vec4 FragColor;
 		void main() {
-			vec4 ambientColor = vec4(0.8, 0.8, 0.8, 1.0);
-			vec4 frontColor = vec4(0.0, 1.0, 0.0, 1.0);
-			vec4 backColor = vec4(1.0, 0.0, 0.0, 1.0);
+			vec4 ambientColor = vec4(1.0, 1.0, 0.0, 1.0);
+			vec4 frontColor = vec4(1.0, 1.0, 0.0, 0.5);
+			vec4 backColor = vec4(1.0, 1.0, 0.0, 1.0);
 			vec3 lightPos = vec3(0.0, 0.0, 0.0);
 			vec3 N = normalize(cross(dFdx(position), dFdy(position)));
 			vec3 L = normalize(lightPos - position);
 			float lambert = dot(N, L);
+			lambert = clamp(lambert, 0.0, 1.0);
 			if(gl_FrontFacing){
 				FragColor = vec4(ambientColor.rgb + lambert * frontColor.rgb, frontColor.a);
 			}
 			else{
 				FragColor = vec4(ambientColor.rgb + lambert * backColor.rgb, backColor.a);
 			}
+			
 		}
 		)";
 

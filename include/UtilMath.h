@@ -1,9 +1,12 @@
 #ifndef UTILMATH_H
 #define UTILMATH_H
+#pragma once
 
 #include <cmath>
 #define EPSILON 0.0001
 #define M_PI 3.14159265358979323846
+
+
 
 namespace Eigen {
 	template<typename Scalar>
@@ -22,10 +25,22 @@ namespace Eigen {
 		tr(2, 3) = -(2.0 * zFar * zNear) / (zFar - zNear);
 		return tr.matrix();
 	}
+
 }
 
 namespace UtilMath
 {
+
+	//Eigen::Matrix4f fromGLM(const glm::mat4& mat) {
+	//	Eigen::Matrix4f result;
+	//	for (int i = 0; i < 4; i++) {
+	//		for (int j = 0; j < 4; j++) {
+	//			result(i, j) = mat[j][i];
+	//		}
+	//	}
+	//	return result;
+	//}
+
 
 	template <typename T>
 	inline bool isZero(T value) 

@@ -35,7 +35,7 @@ int TopologyMapper::findTetrahedron(Gaussian& gs, TetCage& cage) {
 	return -1;
 }
 
-bool TopologyMapper::barycentricGStoTetCage(GaussianCloud& gs, TetCage& cage, std::vector<Eigen::Vector3f>& barycentricGS) {
+bool TopologyMapper::barycentricGStoTetCage(GaussianCloud& gs, TetCage& cage, std::vector<Eigen::Vector4f>& barycentricGS) {
 	bool isValid = true;
 	int numInvalid = 0;
 	barycentricGS.resize(gs.size());
@@ -44,10 +44,11 @@ bool TopologyMapper::barycentricGStoTetCage(GaussianCloud& gs, TetCage& cage, st
 		int tetIndex = findTetrahedron(gsVec[i], cage);
 		if (tetIndex != -1) {
 			Eigen::Vector3f gsi = {gsVec[i].position[0], gsVec[i].position[1], gsVec[i].position[2]};
-			barycentricGS[i] = cage.tetrahedrons[tetIndex].invTransposeMatrix * (gsi - cage.tetrahedrons[tetIndex].vertices[0]);
+			auto tmp = cage.tetrahedrons[tetIndex].invTransposeMatrix * (gsi - cage.tetrahedrons[tetIndex].vertices[0]);
+			barycentricGS[i] = Eigen::Vector4f(tmp[0], tmp[1], tmp[2], tetIndex);
 		}
 		else {
-			barycentricGS[i] = Eigen::Vector3f(-1, -1, -1);
+			barycentricGS[i] = Eigen::Vector4f(-1, -1, -1, -1);
 			//std::cout << "[WARNING]: Point " << i << " is not in any tetrahedron" << std::endl;
 			isValid = false;
 			numInvalid++;
@@ -59,7 +60,7 @@ bool TopologyMapper::barycentricGStoTetCage(GaussianCloud& gs, TetCage& cage, st
 
 #define BB_DIST 20.0f
 
-bool TopologyMapper::barycentricGStoTetCageFromEmptyCage(GaussianCloud& gs, TetCage& cage, std::vector<Eigen::Vector3f>& barycentricGS) {
+bool TopologyMapper::barycentricGStoTetCageFromEmptyCage(GaussianCloud& gs, TetCage& cage, std::vector<Eigen::Vector4f>& barycentricGS) {
 	// construct cage by calculate a 8 points bbox then assign points in order to get tetrahderons.
 
 	std::vector<Eigen::Vector3f> bbox;
@@ -97,20 +98,20 @@ bool TopologyMapper::barycentricGStoTetCageFromEmptyCage(GaussianCloud& gs, TetC
 	*/
 
 	// construct 6 tetrahedrons
-	/*std::vector<Tetrahedron> tetrahedrons{
+	std::vector<Tetrahedron> tetrahedrons{
 		Tetrahedron(bbox[0], bbox[1], bbox[2], bbox[6]),
 		Tetrahedron(bbox[0], bbox[2], bbox[3], bbox[6]),
 		Tetrahedron(bbox[0], bbox[3], bbox[7], bbox[6]),
 		Tetrahedron(bbox[0], bbox[7], bbox[4], bbox[6]),
 		Tetrahedron(bbox[0], bbox[4], bbox[5], bbox[6]),
 		Tetrahedron(bbox[0], bbox[5], bbox[1], bbox[6])
-	};*/
-
-	float size = 65.0f;
-	// construct 1 super tetrahedron with large numbers insuring all points are inside
-	std::vector<Tetrahedron> tetrahedrons{
-		Tetrahedron(-size* Eigen::Vector3f::Ones(), size * Eigen::Vector3f::UnitX(), size * Eigen::Vector3f::UnitY(), size * Eigen::Vector3f::UnitZ())
 	};
+
+	//float size = 65.0f;
+	//// construct 1 super tetrahedron with large numbers insuring all points are inside
+	//std::vector<Tetrahedron> tetrahedrons{
+	//	Tetrahedron(-size* Eigen::Vector3f::Ones(), size * Eigen::Vector3f::UnitX(), size * Eigen::Vector3f::UnitY(), size * Eigen::Vector3f::UnitZ())
+	//};
 
 	TetCage cage_ { tetrahedrons };
 	cage_.init();

@@ -9,6 +9,9 @@
 #include "ShaderManager.h"
 #include "TopologyMapper.h"
 #include "PointCloud.h"
+#include "TetrahedronMeshRenderer.h"
+
+
 #include <Eigen/Dense>
 
 #include "camerasconfig.h"
@@ -48,6 +51,7 @@ public:
     void setupShaders();
     void setupBuffers();
     bool initSplatRenderer();
+    bool loadSplats();
     GLFWwindow* getWindow() { return window; }
 
     void bindKeyCallback(GLFWkeyfun callback) {
@@ -75,13 +79,16 @@ private:
     std::shared_ptr<GaussianCloud> gaussianCloud;
     std::shared_ptr<SplatRenderer> splatRenderer;
     std::shared_ptr<Program> desktopProgram;
+    std::shared_ptr<TetrahedronMeshRenderer> tetrahedronMeshRenderer;
 
     std::shared_ptr<TetCage> cage;
-    std::shared_ptr<std::vector<Eigen::Vector3f>> barycentricGS;
+    std::shared_ptr<std::vector<Eigen::Vector4f>> barycentricGS;
     // fbo
     std::shared_ptr<FrameBuffer> fbo;
     glm::ivec2 fboSize = { 0, 0 };
     std::shared_ptr<Texture> fboColorTex;
+
+    double lastTime = 0.0;
 
 
     static void Clear(glm::ivec2 windowSize, bool setViewport = true)

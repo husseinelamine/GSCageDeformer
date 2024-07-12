@@ -78,8 +78,8 @@ int main(int argc, char* argv[]) {
 	TetCage cage{ tetrahedrons };
 	cage.init();
 
-	TetrahedronMeshRenderer tetrahedronMeshRenderer{ &cage };
-	renderer.addMeshRenderer(&tetrahedronMeshRenderer);
+	//TetrahedronMeshRenderer tetrahedronMeshRenderer{ &cage };
+	//renderer.addMeshRenderer(&tetrahedronMeshRenderer);
 
 	renderer.setupBuffers();
 

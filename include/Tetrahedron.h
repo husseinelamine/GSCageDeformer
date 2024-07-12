@@ -36,6 +36,25 @@ public:
 
     void simplify();
 
+    static void deformCage(TetCage& cage) {
+        float factor = 15.0f;
+        // bend some of the tetrahedrons
+        for (int i = 0; i < cage.tetrahedrons.size(); i++) {
+            if (i % 2 == 0) {
+                cage.tetrahedrons[i].vertices[0][0] += factor;
+                cage.tetrahedrons[i].vertices[1][1] += factor;
+                cage.tetrahedrons[i].vertices[2][2] += factor;
+                cage.tetrahedrons[i].vertices[3][0] += factor;
+			}
+            else {
+                cage.tetrahedrons[i].vertices[0][0] -= factor;
+				cage.tetrahedrons[i].vertices[1][1] -= factor;
+				cage.tetrahedrons[i].vertices[2][2] -= factor;
+				cage.tetrahedrons[i].vertices[3][0] -= factor;
+            }
+		}
+        cage.init();
+    }
 
     void init();
 };

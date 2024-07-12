@@ -4,6 +4,8 @@
 #include "UtilMath.h"
 #include "MeshReader.h"
 #include "TopologyMapper.h"
+#include "TetrahedronMeshRenderer.h"
+#include "SplatDeformer.h"
 
 
 Renderer::Renderer(int width, int height) : width(width), height(height) {}
@@ -40,30 +42,40 @@ int Renderer::init() {
 
 	glEnable(GL_DEPTH_TEST);
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	//setupBuffers();
-	//setupShaders();
+	setupShaders();
+	setupBuffers();
 
-	if (!initSplatRenderer()) {
+	if (!loadSplats()) {
 		return -1;
 	}
 
-	//MeshReader meshReader;
-	//Mesh mesh;
-	//meshReader.readMsh("C:/Users/helamine/source/repos/ISProjectsV1/ISPhysics/assets/meshes/mug/surface_cage.obj_.msh", mesh);
 
-	//std::vector<Tetrahedron> tetrahedrons = meshReader.getTetrahedrons(mesh);
-	//TetCage cage{ tetrahedrons };
-	//cage.init();
+	
+
+	MeshReader meshReader;
+	Mesh mesh;
+	meshReader.readMsh("C:/Users/helamine/source/repos/ISProjectsV1/ISPhysics/assets/meshes/mug/surface_cage.obj_.msh", mesh);
+
+	/*std::vector<Tetrahedron> tetrahedrons = meshReader.getTetrahedrons(mesh);*/
+	float size = 65.0f;
+	// construct 1 super tetrahedron with large numbers insuring all points are inside
+	/*std::vector<Tetrahedron> tetrahedrons{
+		Tetrahedron(-size * Eigen::Vector3f::Ones(), size * Eigen::Vector3f::UnitX(), size * Eigen::Vector3f::UnitY(), size * Eigen::Vector3f::UnitZ())
+	};*/
+	//TetCage cage_{ tetrahedrons };
+	//cage_.init();
 	//cage.simplify();
 
-	std::vector<Eigen::Vector3f> barycentricGS_;
+	std::vector<Eigen::Vector4f> barycentricGS_;
 	TetCage cage_;
 
 	// record how many milliseconds it takes to run the function
 	auto start = std::chrono::high_resolution_clock::now();
 	TopologyMapper::barycentricGStoTetCageFromEmptyCage(*gaussianCloud, cage_, barycentricGS_);
-	//TopologyMapper::barycentricGStoTetCage(*gaussianCloud, cage, barycentricGS);
+	//TopologyMapper::barycentricGStoTetCage(*gaussianCloud, cage_, barycentricGS_);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> elapsed = end - start;
 	std::cout << "Elapsed time: " << elapsed.count() << " s\n";
@@ -71,10 +83,21 @@ int Renderer::init() {
 	std::cout << barycentricGS_.size() << std::endl;
 
 	cage = std::make_shared<TetCage>(cage_);
-	barycentricGS = std::make_shared<std::vector<Eigen::Vector3f>>(barycentricGS_);
 
+	tetrahedronMeshRenderer = std::make_shared<TetrahedronMeshRenderer>(cage.get());
+	addMeshRenderer(tetrahedronMeshRenderer.get());
+	barycentricGS = std::make_shared<std::vector<Eigen::Vector4f>>(barycentricGS_);
 
+	// now that we have the cage, we can deform the splats
 
+	// test if the initial barycentric coordinates are correct
+	// if the object visualized is not deformed, then it is correct
+	//TetCage::deformCage(*cage);	
+	//SplatDeformer::deformGaussianCloud(*gaussianCloud, *barycentricGS, *cage);
+
+	if (!initSplatRenderer()) {
+		return -1;
+	}
 
 	return 1;
 }
@@ -90,8 +113,9 @@ void Renderer::setupBuffers() {
 	}
 }
 
-bool Renderer::initSplatRenderer() {
-	plyFilename = "C:/Users/helamine/source/repos/splatapult/data/mug/point_cloud/iteration_30000/point_cloud.ply";
+bool Renderer::loadSplats() {
+	//plyFilename = "C:/Users/helamine/source/repos/splatapult/data/mug/point_cloud/iteration_30000/point_cloud.ply";
+	plyFilename = "C:/Users/helamine/Documents/3DGS_Tests/Cottage/output/point_cloud/iteration_30000/point_cloud.ply";
 	gaussianCloud = std::make_shared<GaussianCloud>();
 	if (!gaussianCloud->ImportPly(plyFilename))
 	{
@@ -159,7 +183,6 @@ bool Renderer::initSplatRenderer() {
 	std::shared_ptr<FlyCam> flyCam;
 	std::shared_ptr<MagicCarpet> magicCarpet;
 
-	bool isFramebufferSRGBEnabled = false;
 
 	this->flyCam = std::make_shared<FlyCam>(floorMatUp, flyCamPos, flyCamRot, MOVE_SPEED, ROT_SPEED);
 
@@ -171,8 +194,15 @@ bool Renderer::initSplatRenderer() {
 	gaussianCloud->PruneSplats(focalPoint, SPLAT_COUNT);
 #endif
 
+	return true;
+}
+
+bool Renderer::initSplatRenderer() {
+
+
 	splatRenderer = std::make_shared<SplatRenderer>();
 
+	bool isFramebufferSRGBEnabled = false;
 	bool useFullSH = true;
 	bool useRgcSortOverride = false;
 
@@ -201,67 +231,80 @@ void Renderer::addMeshRenderer(MeshRenderer* meshRenderer) {
 void Renderer::render() {
 	/*glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);*/
+	float time = glfwGetTime();
+
+	glm::mat4 cameraMat = this->flyCam->GetCameraMat();
+	//rotate cameraMat around y axis over time
+	//cameraMat = glm::rotate(cameraMat, time, glm::vec3(0.0f, 1.0f, 0.0f));
+	
+
+	glm::vec4 viewport(0.0f, 0.0f, (float)width, (float)height);
+	glm::vec2 nearFar(Z_NEAR, Z_FAR);
+	glm::mat4 projMat = glm::perspective(FOVY, (float)width / (float)height, Z_NEAR, Z_FAR);
 
 	Clear(glm::ivec2(width, height), true);
 
-	float time = glfwGetTime();
 
-	/*shaderManager.useShader("basic");
+	// change polygon mode to fill
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	splatRenderer->Sort(cameraMat, projMat, viewport, nearFar);
+	splatRenderer->Render(cameraMat, projMat, viewport, nearFar);
+
+
+
+	shaderManager.useShader("basic");
 
 	Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
 	Eigen::Matrix4f view = Eigen::Matrix4f::Identity();
 	Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
 
+	//
+//	Eigen::Matrix4f cameraMatE = UtilMath::fromGLM(cameraMat);
+//	Eigen::Matrix4f projMatE = UtilMath::fromGLM(projMat);
+
 	model = Eigen::Affine3f(Eigen::Translation3f(0.0f, 0.0f, 0.0f)).matrix();
-	view = Eigen::Affine3f(Eigen::Translation3f(0.0f, 0.0f, -100.0f)).matrix();
-	projection = Eigen::perspective(45.0f, (float)width / (float)height, 0.1f, 1000.0f);
+	view = Eigen::Affine3f(Eigen::Translation3f(0.0f, 0.0f, -25.0f)).matrix();
+	projection = Eigen::perspective(FOVY, (float)width / (float)height, Z_NEAR, Z_FAR);
+
+	auto basicShader = shaderManager.getShader("basic");
+	basicShader->use();
 
 	GLint modelLoc = glGetUniformLocation(shaderManager.getShader("basic")->getID(), "model");
 	GLint viewLoc = glGetUniformLocation(shaderManager.getShader("basic")->getID(), "view");
 	GLint projLoc = glGetUniformLocation(shaderManager.getShader("basic")->getID(), "projection");
+	GLint modelViewMat = glGetUniformLocation(shaderManager.getShader("basic")->getID(), "modelViewMat");
 
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.data());
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.data());
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, projection.data());
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, &projMat[0][0]);
+	glm::mat4 viewMatinv = glm::inverse(cameraMat);
+	glUniformMatrix4fv(modelViewMat, 1, GL_FALSE, &viewMatinv[0][0]);
 
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	for (auto meshRenderer : meshRenderers) {
 		meshRenderer->render();
-	}*/
-
-	// check fboSize against window size
-	if (fboSize.x != width || fboSize.y != height)
-	{
-		fboSize = glm::ivec2(width, height);
-		fbo = std::make_shared<FrameBuffer>();
-
-		Texture::Params texParams;
-		texParams.minFilter = FilterType::Nearest;
-		texParams.magFilter = FilterType::Nearest;
-		texParams.sWrap = WrapType::ClampToEdge;
-		texParams.tWrap = WrapType::ClampToEdge;
-
-		fboColorTex = std::make_shared<Texture>(width, height,
-			GL_RGBA32F, GL_RGBA, GL_FLOAT, texParams);
-
-		fbo->AttachColor(fboColorTex);
-		fbo->Bind();
-
 	}
 
-	if (fbo) {
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		Clear(fboSize, true);
-		RenderDesktop(fboSize, desktopProgram, fbo->GetColorTexture()->texture, false);
-	}
+//	Clear(glm::vec2(width, height), true);
 
-	glm::mat4 cameraMat = this->flyCam->GetCameraMat();
-	glm::vec4 viewport(0.0f, 0.0f, (float)width, (float)height);
-	glm::vec2 nearFar(Z_NEAR, Z_FAR);
-	glm::mat4 projMat = glm::perspective(FOVY, (float)width / (float)height, Z_NEAR, Z_FAR);
+	//if (fbo) {
+	//	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//	Clear(fboSize, true);
+	//	RenderDesktop(fboSize, desktopProgram, fbo->GetColorTexture()->texture, false);
+	//}
+
 
 	//splatRenderer->deformCov(gaussianCloud);
-	splatRenderer->Sort(cameraMat, projMat, viewport, nearFar);
-	splatRenderer->Render(cameraMat, projMat, viewport, nearFar);
+
+	// each 3s try to deform the splats and update
+	if (time) {
+		lastTime = time;
+		std::cout << "3s passed, deforming" << std::endl;
+		
+		//splatRenderer->deformCov(gaussianCloud, barycentricGS, cage);
+		SplatDeformer::deformGaussianCloud(*gaussianCloud, *barycentricGS, *cage);
+		splatRenderer->deformCov(gaussianCloud);
+	}
 
 	glfwSwapBuffers(window);
 	glfwPollEvents();

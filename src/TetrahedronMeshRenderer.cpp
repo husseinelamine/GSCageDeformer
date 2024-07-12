@@ -57,5 +57,6 @@ void TetrahedronMeshRenderer::setupBuffers() {
 
 void TetrahedronMeshRenderer::render() {
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, cage->tetrahedrons.size() * 12, GL_UNSIGNED_INT, 0);
+    //glDrawElements(GL_TRIANGLES, cage->tetrahedrons.size() * 12, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT, 0);
 }

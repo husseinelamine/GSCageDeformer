@@ -15,10 +15,10 @@ class TopologyMapper
 		static bool barycentricPCtoTetCage(GSDeformer::PointCloud &pc, TetCage &cage, GSDeformer::PointCloud &barycentricPC);
 		static int findTetrahedron(GSDeformer::PointCloud &pc, TetCage &cage);
 
-		static bool barycentricGStoTetCage(GaussianCloud &gs, TetCage &cage, std::vector<Eigen::Vector3f> &barycentricGS);
+		static bool barycentricGStoTetCage(GaussianCloud &gs, TetCage &cage, std::vector<Eigen::Vector4f> &barycentricGS);
 		static int findTetrahedron(Gaussian &gs, TetCage &cage);
 
-		static bool barycentricGStoTetCageFromEmptyCage(GaussianCloud &gs, TetCage&cage, std::vector<Eigen::Vector3f> &barycentricGS);
+		static bool barycentricGStoTetCageFromEmptyCage(GaussianCloud &gs, TetCage&cage, std::vector<Eigen::Vector4f> &barycentricGS);
 
 
 };
