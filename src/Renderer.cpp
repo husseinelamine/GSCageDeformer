@@ -62,20 +62,19 @@ int Renderer::init() {
 	/*std::vector<Tetrahedron> tetrahedrons = meshReader.getTetrahedrons(mesh);*/
 	float size = 65.0f;
 	// construct 1 super tetrahedron with large numbers insuring all points are inside
-	/*std::vector<Tetrahedron> tetrahedrons{
+	std::vector<Tetrahedron> tetrahedrons{
 		Tetrahedron(-size * Eigen::Vector3f::Ones(), size * Eigen::Vector3f::UnitX(), size * Eigen::Vector3f::UnitY(), size * Eigen::Vector3f::UnitZ())
-	};*/
-	//TetCage cage_{ tetrahedrons };
-	//cage_.init();
-	//cage.simplify();
+	};
+	TetCage cage_{ tetrahedrons };
+	cage_.init();
 
 	std::vector<Eigen::Vector4f> barycentricGS_;
-	TetCage cage_;
+//	TetCage cage_;
 
 	// record how many milliseconds it takes to run the function
 	auto start = std::chrono::high_resolution_clock::now();
-	TopologyMapper::barycentricGStoTetCageFromEmptyCage(*gaussianCloud, cage_, barycentricGS_);
-	//TopologyMapper::barycentricGStoTetCage(*gaussianCloud, cage_, barycentricGS_);
+	//TopologyMapper::barycentricGStoTetCageFromEmptyCage(*gaussianCloud, cage_, barycentricGS_);
+	TopologyMapper::barycentricGStoTetCage(*gaussianCloud, cage_, barycentricGS_);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> elapsed = end - start;
 	std::cout << "Elapsed time: " << elapsed.count() << " s\n";
@@ -297,11 +296,12 @@ void Renderer::render() {
 	//splatRenderer->deformCov(gaussianCloud);
 
 	// each 3s try to deform the splats and update
-	if (time) {
+	if (time - lastTime > 3.0f) {
 		lastTime = time;
 		std::cout << "3s passed, deforming" << std::endl;
 		
 		//splatRenderer->deformCov(gaussianCloud, barycentricGS, cage);
+		//TetCage::deformCage(*cage);
 		SplatDeformer::deformGaussianCloud(*gaussianCloud, *barycentricGS, *cage);
 		splatRenderer->deformCov(gaussianCloud);
 	}

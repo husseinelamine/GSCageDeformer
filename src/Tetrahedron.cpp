@@ -24,6 +24,7 @@ void Tetrahedron::init() {
 
     // Calculate the inverse transpose of the edge matrix
     invTransposeMatrix = edgeMatrix.inverse().transpose();
+    //invTransposeMatrix = edgeMatrix.inverse().transpose();
 }
 
 bool Tetrahedron::isValidBarycentric(const Eigen::Vector3f& bary) const {
@@ -49,17 +50,44 @@ bool Tetrahedron::contains(const Eigen::Vector3f& p) const {
     
 }
 
-bool Tetrahedron::contains(const Gaussian& g) const {
+float scalarTripleProduct(const Eigen::Vector3f& a, const Eigen::Vector3f& b, const Eigen::Vector3f& c) {
+	return a.dot(b.cross(c));
+}
+
+Eigen::Vector3f Tetrahedron::contains(const Gaussian& g) const {
     // Returns true when the first point is found inside the tetrahedron
     Eigen::Vector3f gpos{g.position[0], g.position[1], g.position[2] };
 	Eigen::Vector3f AP = gpos - vertices[0];
 	Eigen::Vector3f bary = invTransposeMatrix * AP;
 
-    if (isValidBarycentric(bary)) {
-		return true;
-	}
+    Eigen::Vector3f v0 = vertices[0];
+    Eigen::Vector3f v1 = vertices[1];
+    Eigen::Vector3f v2 = vertices[2];
+    Eigen::Vector3f v3 = vertices[3];
 
-	return false;
+    Eigen::Vector3f vap = gpos - v0;
+    Eigen::Vector3f vbp = gpos - v1;
+
+    Eigen::Vector3f vab = v1 - v0;
+    Eigen::Vector3f vac = v2 - v0;
+    Eigen::Vector3f vad = v3 - v0;
+
+    Eigen::Vector3f vbc = v2 - v1;
+    Eigen::Vector3f vbd = v3 - v1;
+
+    float va6 = scalarTripleProduct(vbp, vbd, vbc);
+    float vb6 = scalarTripleProduct(vap, vac, vad);
+    float vc6 = scalarTripleProduct(vap, vad, vab);
+    float vd6 = scalarTripleProduct(vap, vab, vac);
+    float v6 = 1 / scalarTripleProduct(vab, vac, vad);
+
+
+    // check if this calculation is correct
+    Eigen::Vector3f bary2 = Eigen::Vector3f(va6 * v6, vb6 * v6, vc6 * v6);
+    if (isValidBarycentric(bary2))
+		return bary2;
+
+    return Eigen::Vector3f(-1, -1, -1);
 }
 
 void TetCage::init() {

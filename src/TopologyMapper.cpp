@@ -27,25 +27,39 @@ bool TopologyMapper::barycentricPCtoTetCage(GSDeformer::PointCloud& pc, TetCage&
 	return isValid;
 }
 
-int TopologyMapper::findTetrahedron(Gaussian& gs, TetCage& cage) {
+Eigen::Vector4f TopologyMapper::findTetrahedron(Gaussian& gs, TetCage& cage) {
 	for (int i = 0; i < cage.tetrahedrons.size(); i++) {
-		if (cage.tetrahedrons[i].contains(gs))
-			return i;
+		Eigen::Vector3f bary = cage.tetrahedrons[i].contains(gs);
+		if (bary[0] != -1)
+			return Eigen::Vector4f(bary[0], bary[1], bary[2], i);
 	}
-	return -1;
+	return Eigen::Vector4f(-1, -1, -1, -1);
 }
 
 bool TopologyMapper::barycentricGStoTetCage(GaussianCloud& gs, TetCage& cage, std::vector<Eigen::Vector4f>& barycentricGS) {
+	if (cage.tetrahedrons.size() == 0) {
+		return barycentricGStoTetCageFromEmptyCage(gs, cage, barycentricGS);
+	}
+	cage.init();
 	bool isValid = true;
 	int numInvalid = 0;
 	barycentricGS.resize(gs.size());
 	std::vector<Gaussian>& gsVec = gs.GetGaussianVec();
 	for (int i = 0; i < gs.size(); i++) {
-		int tetIndex = findTetrahedron(gsVec[i], cage);
+		Eigen::Vector4f bary = findTetrahedron(gsVec[i], cage);
+		int tetIndex = bary[3];
 		if (tetIndex != -1) {
-			Eigen::Vector3f gsi = {gsVec[i].position[0], gsVec[i].position[1], gsVec[i].position[2]};
-			auto tmp = cage.tetrahedrons[tetIndex].invTransposeMatrix * (gsi - cage.tetrahedrons[tetIndex].vertices[0]);
-			barycentricGS[i] = Eigen::Vector4f(tmp[0], tmp[1], tmp[2], tetIndex);
+			/*Eigen::Vector3f gsi = {gsVec[i].position[0], gsVec[i].position[1], gsVec[i].position[2]};
+			auto tmp = cage.tetrahedrons[tetIndex].invTransposeMatrix * (-gsi + cage.tetrahedrons[tetIndex].vertices[0]);
+			barycentricGS[i] = Eigen::Vector4f(tmp[0], tmp[1], tmp[2], tetIndex);*/
+			barycentricGS[i] = bary;
+
+			// check calculated barycentric is valid by comparing the point with the barycentric multiplied by the vertices
+			Eigen::Vector3f p = cage.tetrahedrons[tetIndex].vertices[0] * bary[0] + cage.tetrahedrons[tetIndex].vertices[1] * bary[1] + cage.tetrahedrons[tetIndex].vertices[2] * bary[2] + cage.tetrahedrons[tetIndex].vertices[3] * bary[3];
+			Eigen::Vector3f oldp = { gsVec[i].position[0], gsVec[i].position[1], gsVec[i].position[2] };
+
+			float diff = (p - oldp).norm();
+			diff = diff;
 		}
 		else {
 			barycentricGS[i] = Eigen::Vector4f(-1, -1, -1, -1);

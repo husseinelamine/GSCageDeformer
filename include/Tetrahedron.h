@@ -20,7 +20,7 @@ public:
 
     void init();
     bool contains(const Eigen::Vector3f& p) const; // returns p is inside or outside the tetrahedron
-    bool contains(const Gaussian& g) const;
+    Eigen::Vector3f contains(const Gaussian& g) const;
     bool isValidBarycentric(const Eigen::Vector3f& bary) const;
 };
 
@@ -37,7 +37,7 @@ public:
     void simplify();
 
     static void deformCage(TetCage& cage) {
-        float factor = 15.0f;
+        float factor = 0.01;
         // bend some of the tetrahedrons
         for (int i = 0; i < cage.tetrahedrons.size(); i++) {
             if (i % 2 == 0) {
